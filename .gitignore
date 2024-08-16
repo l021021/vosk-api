@@ -1,6 +1,6 @@
 # Object files
 *.o
-
+model/
 # Temp files
 nohup.out
 
