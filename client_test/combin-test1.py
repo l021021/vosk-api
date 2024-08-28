@@ -11,12 +11,14 @@ from ollama import AsyncClient
 import asyncio
 
 # 设置 HTTP API URL
-vosk_api_url = "http://127.0.0.1:2700/api/v1/recognize"
-ollama_api_url = "http://127.0.0.1:11434"
+vosk_api_url = "http://10.0.0.64:2700/api/v1/recognize"
+# vosk_api_url = "http://127.0.0.1:2700/api/v1/recognize"
+ollama_api_url = "http://10.0.0.64:11434"
+# ollama_api_url = "http://127.0.0.1:11434"
 
 # 创建队列用于音频数据传输
 audio_queue = []
-
+recognized_text = ''
 # 定义音频回调函数
 
 
@@ -33,6 +35,8 @@ def stop_recording(signal=None, frame=None):
     global running
     running = False
     print("\nRecording stopped.")
+    if recognized_text.strip():
+        asyncio.run(chat(recognized_text))
 
 
 # 初始化异步客户端
@@ -40,7 +44,7 @@ client = AsyncClient(host=ollama_api_url)
 
 
 async def chat(prompt):
-    print('qustion:', prompt)
+    print('question:', prompt)
     prompt_ = {'role': 'user', 'content': prompt}
     response = await client.chat(model='qwen', messages=[prompt_])
     print(response['message']['content'])
@@ -53,7 +57,7 @@ samplerate = 16000  # 将采样率设置为 16000Hz
 blocksize = 32000  # 读取更多的音频数据
 
 # 启动音频流
-recognized_text = ""
+# recognized_text = ""
 output_file = "D:\\CODE\\my-vosk-api\\recognized_text.txt"
 running = True
 
@@ -85,25 +89,21 @@ with open(output_file, "w", encoding="utf-8") as f:
                 wav_io.seek(0)
                 files = {'audio': ('audio.wav', wav_io, 'audio/wav')}
                 response = requests.post(vosk_api_url, files=files)
-                print(response.text)
+                # print(response.text)
 
                 if response.status_code == 200:
-                    result = response.text
-                    if True:  # isinstance(result, dict):  # 假设返回的是一个JSON对象
-                        res_dict = result
-                        for word in res_dict:
-                            print(word)
-                            recognized_text += res_dict.get("text", "")
-                            recognized_text += res_dict.get("partial", "")
 
-                        # print("Recognized:", res_dict.get("text", ""))
-                        # 合并返回的结果
-                        print(recognized_text)
+                    result = response.json()
+                    for res_str in result:  # 处理返回的列表，解析每个字符串
+                        res_dict = json.loads(res_str)  # 将字符串解析为字典
+                        # 将识别结果存入字符串
+                        recognized_text += res_dict.get("text", "") + " "
+                        # print(recognized_text)
 
-                        f.write(res_dict.get("text", ""))  # 将识别结果写入文件
-                        f.flush()  # 确保数据被立即写入文件
+                    f.write(res_dict.get("text", ""))  # 将识别结果写入文件
+                    f.flush()  # 确保数据被立即写入文件
                 else:
                     print(f"Error {response.status_code}: {response.text}")
 
 # 在录音结束后调用异步函数
-asyncio.run(chat(recognized_text))
+# asyncio.run(chat(recognized_text))
