@@ -3,10 +3,13 @@
 import wave
 import sys
 import traceback
+from ollama import Client
+import asyncio
+from ollama import AsyncClient
 
 from websocket import create_connection
 
-ws = create_connection("ws://127.0.0.1:2900")
+ws = create_connection("ws://127.0.0.1:2800")
 
 # wf = wave.open(sys.argv[1], "rb")
 wf = wave.open('D:\\CODE\\my-vosk-api\\test_recording.wav', "rb")
@@ -22,7 +25,7 @@ try:
             break
 
         ws.send_binary(data)
-        print(ws.recv())
+        print('wssnd', ws.recv())
     ws.send('{"eof" : 1}')
     print(ws.recv())
 

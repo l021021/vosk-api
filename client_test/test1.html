@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vosk 语音识别测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Vosk 语音识别测试</h1>
+    <input type="file" id="fileInput" accept=".wav" />
+    <button onclick="sendAudio()">发送音频</button>
+    <div id="result"></div>
+
+    <script>
+        async function sendAudio() {
+            const fileInput = document.getElementById('fileInput');
+            const resultDiv = document.getElementById('result');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert('请选择一个WAV文件');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('http://localhost:2700/api/v1/recognize', {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors'  // 使用 no-cors 模式
+                });
+
+                if (!response.ok) {
+                    throw new Error('网络响应不正常');
+                }
+
+                const data = await response.json();
+                resultDiv.textContent = '识别结果: ' + data.text;
+            } catch (error) {
+                console.error('发生错误:', error);
+                resultDiv.textContent = '发生错误: ' + error.message;
+            }
+        }
+    </script>
+</body>
+
+</html>

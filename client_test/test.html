@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vosk 和 Ollama API 示例</title>
+</head>
+
+<body>
+    <h1>Vosk 和 Ollama API 示例</h1>
+    <input type="file" id="fileInput" accept=".wav">
+    <button onclick="processFile()">上传并处理文件</button>
+    <h2>Vosk API 响应</h2>
+    <textarea id="voskResponse" rows="10" cols="50"></textarea>
+    <h2>Ollama API 响应</h2>
+    <textarea id="ollamaResponse" rows="10" cols="50"></textarea>
+
+    <script>
+        const voskApiUrl = "http://10.0.0.64:2700/api/v1/recognize";
+        const ollamaApiUrl = "http://10.0.0.64:11434";
+
+        async function processFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("请选择一个 WAV 文件");
+                return;
+            }
+
+            try {
+                // 将文件发送到 Vosk API
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const voskResponse = await fetch(voskApiUrl, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors'  // 使用 no-cors 模式
+                });
+
+                if (!voskResponse.ok) {
+                    throw new Error(`Vosk API 请求失败: ${voskResponse.statusText}`);
+                }
+
+                // 无法读取响应内容
+                // const voskResult = await voskResponse.json();
+                // const recognizedText = voskResult.text || "";
+
+                // 显示 Vosk API 响应
+                document.getElementById('voskResponse').value = "无法读取响应内容";
+
+                // 将识别的文本发送到 Ollama API
+                const ollamaResponse = await fetch(ollamaApiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ prompt: "示例文本" }),  // 使用示例文本
+                    mode: 'no-cors'  // 使用 no-cors 模式
+                });
+
+                if (!ollamaResponse.ok) {
+                    throw new Error(`Ollama API 请求失败: ${ollamaResponse.statusText}`);
+                }
+
+                // 无法读取响应内容
+                // const ollamaResult = await ollamaResponse.json();
+                // const ollamaText = ollamaResult.response || "";
+
+                // 显示 Ollama API 响应
+                document.getElementById('ollamaResponse').value = "无法读取响应内容";
+            } catch (error) {
+                console.error('处理文件时发生错误:', error);
+                alert('处理文件时发生错误，请检查控制台以获取详细信息。');
+            }
+        }
+    </script>
+</body>
+
+</html>

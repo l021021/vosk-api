@@ -7,7 +7,7 @@ import numpy as np
 import threading
 
 # 设置 WebSocket API URL
-vosk_api_url = "ws://localhost:2900"
+vosk_api_url = "ws://localhost:2800"
 
 # 创建 WebSocket 客户端
 ws = websocket.WebSocket()
@@ -59,8 +59,8 @@ device_info = sd.query_devices(None, 'input')
 samplerate = int(device_info['default_samplerate'])
 
 # 启动音频流
-recognized_text = ""
-output_file = "recognized_text.txt"
+recognized_resultresult = ""
+output_file = "recognized_resultresult.txt"
 running = True
 
 with open(output_file, "w") as f:
@@ -71,18 +71,21 @@ with open(output_file, "w") as f:
         print('#' * 80)
 
         # 设置一个定时器，在5秒后调用 stop_recording 函数
-        timer = threading.Timer(5.0, stop_recording)
+        timer = threading.Timer(10.0, stop_recording)
         timer.start()
 
         while running:
             if len(audio_queue) > 0:
                 data = audio_queue.pop(0)
                 result = send_to_vosk(ws, data)
-                text = result
-                if text:
-                    print("Recognized:", text)
-                    recognized_text += text
-                    f.write(text)  # 将识别结果写入文件
+                print(type(result))
+
+                # result_json = json.loads(result)
+                # result = result_json.get("resultresult", "")  # 获取识别结果中的文本部分
+                if result:
+                    # print("Recognized:",result)
+                    # recognized_text += result + "\n"
+                    f.write(result + "\n")  # 将识别结果写入文件，并换行
                     f.flush()  # 确保数据被立即写入文件
 
 # 关闭 WebSocket 连接和文件（在 stop_recording 中已经处理）

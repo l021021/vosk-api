@@ -10,7 +10,7 @@ import io
 import wave
 
 # 设置 HTTP API URL
-vosk_api_url = "http://127.0.0.1:2800/api/v1/recognize"
+vosk_api_url = "http://10.0.0.64:2700/api/v1/recognize"
 
 # 创建队列用于音频数据传输
 audio_queue = []
