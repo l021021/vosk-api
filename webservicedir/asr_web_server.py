@@ -16,13 +16,14 @@ def recognize():
     if 'audio' not in request.files:
         return jsonify({"error": "No audio file provided"}), 400
 
-    # 获取音频文件
-    audio_file = request.files['audio']
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'error': 'No selected file'})
 
-    # 保存临时音频文件
-    audio_path = "temp.wav"
-    audio_file.save(audio_path)
-
+    wf = wave.open(file.stream, 'rb')
+    rec.AcceptWaveform(wf.readframes(wf.getnframes()))
+    result = rec.Result()
+    wf.close()
     results = []
 
     # 打开音频文件并进行识别

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Chat</title>
+    <style>
+        #history {
+            width: 70%;
+            height: 300px;
+            /* 设置一个固定高度 */
+            overflow-y: scroll;
+            /* 添加垂直滚动条 */
+            border: 1px solid #ccc;
+            /* 添加边框 */
+            padding: 10px;
+            /* 添加内边距 */
+            margin-top: 20px;
+            /* 添加上边距 */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Web Chat</h1>
+    <form method="POST">
+        <input type="text" name="user_input" placeholder="Type your message here">
+        <button type="submit">Send</button>
+    </form>
+    <button id="recordButton">Hold to Record</button>
+    <ul id="history">
+        {% for entry in history %}
+        <li><strong>User:</strong> {{ entry.user }} <br> <strong>Response:</strong> {{ entry.response }}</li>
+        {% endfor %}
+    </ul>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+
+        document.getElementById('recordButton').addEventListener('mousedown', startRecording);
+        document.getElementById('recordButton').addEventListener('mouseup', stopRecording);
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        audioChunks.push(event.data);
+                    });
+
+                    mediaRecorder.addEventListener('stop', () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+                        formData.append('audio', audioBlob, 'recording.wav');
+
+                        console.log('Recording stopped, sending file to server...');
+
+                        fetch('/upload', {
+                            method: 'POST',
+                            body: formData
+                        }).then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok ' + response.statusText);
+                            }
+                            return response.json(); // Assuming the server returns a JSON response
+                        }).then(data => {
+                            console.log('File saved successfully:', data);
+                        }).catch(error => {
+                            console.error('Error saving file:', error);
+                        });
+
+                        function stopRecording() {
+                            mediaRecorder.stop();
+                        }
+    </script>
+</body>
+
+</html>

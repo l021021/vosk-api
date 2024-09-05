@@ -12,9 +12,9 @@ import asyncio
 
 # 设置 HTTP API URL
 vosk_api_url = "http://10.0.0.64:2700/api/v1/recognize"
-# vosk_api_url = "http://127.0.0.1:2700/api/v1/recognize"
+vosk_api_url = "http://127.0.0.1:2700/api/v1/recognize"
 ollama_api_url = "http://10.0.0.64:11434"
-# ollama_api_url = "http://127.0.0.1:11434"
+ollama_api_url = "http://127.0.0.1:11434"
 
 # 创建队列用于音频数据传输
 audio_queue = []
@@ -31,12 +31,26 @@ def callback(indata, frames, time, status):
 # 处理 `Ctrl+C` 信号以安全地停止录音
 
 
+def save_audio_to_file():
+    if len(audio_queue) > 0:
+        data = np.concatenate(audio_queue)  # 将队列中的音频数据拼接成一个大的数组
+        audio_queue.clear()  # 清空队列
+        file_path = "D:\\record1.wav"
+        with wave.open(file_path, 'wb') as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(samplerate)
+            wf.writeframes(data.tobytes())
+        print(f"Audio saved to {file_path}")
+
+
 def stop_recording(signal=None, frame=None):
     global running
     running = False
     print("\nRecording stopped.")
     if recognized_text.strip():
         asyncio.run(chat(recognized_text))
+    save_audio_to_file()
 
 
 # 初始化异步客户端

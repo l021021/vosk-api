@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Recorder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+
+        #recordButton {
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .recording {
+            background-color: red;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Web Recorder</h1>
+    <button id="recordButton">Hold to Record</button>
+    <p id="status"></p>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        const statusElement = document.getElementById('status');
+
+        document.getElementById('recordButton').addEventListener('mousedown', startRecording);
+        document.getElementById('recordButton').addEventListener('mouseup', stopRecording);
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({
+                audio: {
+                    channelCount: 1,
+                    sampleRate: 16000
+                }
+            })
+                .then(stream => {
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    document.getElementById('recordButton').classList.add('recording');
+                    statusElement.textContent = "Recording...";
+
+                    mediaRecorder.addEventListener('dataavailable', event => {
+                        audioChunks.push(event.data);
+                    });
+
+                    mediaRecorder.addEventListener('stop', () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        const formData = new FormData();
+                        formData.append('audio', audioBlob, 'recording.wav');
+
+                        console.log('Recording stopped, sending file to server...');
+
+                        fetch('/upload', {
+                            method: 'POST',
+                            body: formData
+                        }).then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok ' + response.statusText);
+                            }
+                            return response.text();
+                        }).then(data => {
+                            console.log('File saved successfully:', data);
+                            statusElement.textContent = "File saved successfully.";
+                        }).catch(error => {
+                            console.error('Error saving file:', error);
+                            statusElement.textContent = "Error saving file.";
+                        });
+
+                        audioChunks = [];
+                    });
+                })
+                .catch(error => {
+                    console.error('Error accessing audio devices:', error);
+                    statusElement.textContent = "Error accessing audio devices.";
+                });
+        }
+
+        function stopRecording() {
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                document.getElementById('recordButton').classList.remove('recording');
+                statusElement.textContent = "Stopped recording.";
+            }
+        }
+    </script>
+</body>
+
+</html>
